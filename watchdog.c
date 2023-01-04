@@ -26,6 +26,8 @@ int main(){
     int bytes_received=-1;
     int socket_p = -1;
 
+    socklen_t new_ping_leng;
+
 
     char flag = 'k';
 
@@ -38,7 +40,7 @@ int main(){
     }
     watchdog_add.sin_family = AF_INET;
     watchdog_add.sin_port = WATCHDOG_PORT;
-    watchdog_add.sin_addr.s_addr = inet_addr(WATCHDOG_IP);
+    watchdog_add.sin_addr.s_addr = inet_addr((char *)WATCHDOG_IP);
     
     //bind
     int e = bind(sockfd, (struct sockaddr*)&watchdog_add, sizeof(watchdog_add));
@@ -53,12 +55,14 @@ int main(){
         perror("listening");
         exit(1);
     }
+    printf("listening\n");
 
     //zero the new_ping address 
     memset(&new_ping_add, 0, sizeof(new_ping_add));
+    new_ping_leng = sizeof(new_ping_add);
 
     //accept new connection 
-    if(socket_p = accept(sockfd, (struct sockaddr *)&new_ping_add, sizeof(new_ping_add)) == -1)
+    if(socket_p = accept(sockfd, (struct sockaddr *)&new_ping_add, &new_ping_leng) == -1)
     {
         perror("error accept");
         exit(1);
@@ -68,14 +72,18 @@ int main(){
     //recv the flag from the new_ping 
     while(time_count<10)
     {
-        if(bytes_received=recv(socket_p, &flag, sizeof(char), MSG_DONTWAIT)>0)
+        bytes_received=recv(socket_p, &flag, sizeof(flag), MSG_DONTWAIT);
+        printf("%d\n", bytes_received);
+        if(bytes_received>0)
         {
             if(flag == 'z')
             {
+                printf("im here2\n");
                 close(socket_p);
                 close(sockfd);
                 exit(1);
             }
+            printf("im here3\n");
             time_count = 0;
         }
         else
@@ -84,6 +92,7 @@ int main(){
             sleep(1);//to make it real second lol
         }
     }
+    printf("im here\n");
     close(socket_p);
     close(sockfd);
     exit(1);

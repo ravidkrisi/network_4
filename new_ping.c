@@ -16,6 +16,8 @@
 #include <sys/time.h> // gettimeofday()
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 // IPv4 header len without options
 #define IP4_HDRLEN 20
@@ -75,22 +77,24 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // create TCP socket
-    int socktcp = socket(AF_INET, SOCK_STREAM, 0);
-    if(sock < 0)
-    {
-        perror("socket tcp");
-        return 1;
-    }
+  
     //set up the WatchDog address
     memset(&watchdog_dest, 0, sizeof(watchdog_dest));
     watchdog_dest.sin_family = AF_INET;
-    watchdog_dest.sin_port = htons(WATCHDOG_PORT);
+    watchdog_dest.sin_port = WATCHDOG_PORT;
+    // watchdog_dest.sin_addr = inet_addr(WATCHDOG_IP);
 
     if(inet_pton(AF_INET, (const char *)WATCHDOG_IP, &watchdog_dest.sin_addr) == -1)
     {
         perror("IP address not valid");
         exit(1);
+    }
+      // create TCP socket
+    int socktcp = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0)
+    {
+        perror("socket tcp");
+        return 1;
     }
 
     // arguments to run the WatchDog and use fork to run 2 proccesses 
@@ -113,7 +117,7 @@ int main(int argc, char *argv[])
         //connect to the watchdog
         if (connect(socktcp, (struct sockaddr *)&watchdog_dest, sizeof(watchdog_dest)) == -1)
         {
-            printf("error connecting the socket\n");
+            perror("connecting: \n");
             exit(1);
         } 
     
@@ -167,9 +171,9 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    //send flag to WatchDog
+    //send flag to WatchDog using TCP socket
     char flag = 'k';
-    if (send(socktcp, &flag, sizeof(char), 0) == -1) 
+    if (send(socktcp, &flag, sizeof(flag), MSG_DONTWAIT) == -1) 
     {
     perror("[-]Error in sending file.");
     exit(1);
