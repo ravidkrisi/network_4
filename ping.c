@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
     int ttl=-1;
     int datalen = strlen(data) + 1;
 
-
     //check that we received 2 arguments 
     if(argc!=2)
     {

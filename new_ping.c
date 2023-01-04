@@ -26,7 +26,7 @@
 #define ICMP_HDRLEN 8
 
 //port and IP used to make TCP connection 
-#define WATCHDOG_PORT 3030
+#define WATCHDOG_PORT 3090
 #define WATCHDOG_IP "127.0.0.1"
 
 // Checksum algo
@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
     int status;
 
     double ping_time = 0;
+
+    char buffer[1024] = {'\0'};
 
 
     //check that we received 2 arguments 
@@ -82,13 +84,13 @@ int main(int argc, char *argv[])
     memset(&watchdog_dest, 0, sizeof(watchdog_dest));
     watchdog_dest.sin_family = AF_INET;
     watchdog_dest.sin_port = WATCHDOG_PORT;
-    // watchdog_dest.sin_addr = inet_addr(WATCHDOG_IP);
+    watchdog_dest.sin_addr.s_addr = inet_addr((char *)WATCHDOG_IP);
 
-    if(inet_pton(AF_INET, (const char *)WATCHDOG_IP, &watchdog_dest.sin_addr) == -1)
-    {
-        perror("IP address not valid");
-        exit(1);
-    }
+    // if(inet_pton(AF_INET, (const char *)WATCHDOG_IP, &watchdog_dest.sin_addr) == -1)
+    // {
+    //     perror("IP address not valid");
+    //     exit(1);
+    // }
       // create TCP socket
     int socktcp = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
@@ -172,8 +174,8 @@ int main(int argc, char *argv[])
     }
 
     //send flag to WatchDog using TCP socket
-    char flag = 'k';
-    if (send(socktcp, &flag, sizeof(flag), MSG_DONTWAIT) == -1) 
+    char flag [2]= "00";
+    if (send(socktcp, flag, sizeof(flag), 0) == -1) 
     {
     perror("[-]Error in sending file.");
     exit(1);
