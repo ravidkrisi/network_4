@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in dest_in; //destination ip
     struct sockaddr_in watchdog_dest;//watchdog address
     struct timeval start, end;
+    
 
     char data[IP_MAXPACKET] = "This is the ping.\n";
     char reply_ip[IP_MAXPACKET]={0};
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
         printf("received invalid IP address");
     }
 
-    // Create raw socket for IP-RAW (make IP-header by yourself)
+    // Create raw socket 
     int sock = -1;
     if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1)
     {
@@ -86,7 +87,7 @@ int main(int argc, char *argv[])
     watchdog_dest.sin_family = AF_INET;
     watchdog_dest.sin_port = htons(WATCHDOG_PORT);
 
-    if(inet_pton(AF_INET, (const char *)WATCHDOG_IP, &watchdog_dest.sin_addr,) == -1)
+    if(inet_pton(AF_INET, (const char *)WATCHDOG_IP, &watchdog_dest.sin_addr) == -1)
     {
         perror("IP address not valid");
         exit(1);
@@ -166,12 +167,24 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    //send flag to WatchDog
+    char flag = 'k';
+    if (send(socktcp, &flag, sizeof(char), 0) == -1) 
+    {
+    perror("[-]Error in sending file.");
+    exit(1);
+    }
+
     // Get the ping response
     bzero(packet, IP_MAXPACKET);
     socklen_t len = sizeof(dest_in);
     int bytes_received = -1;
-    while ((bytes_received = recvfrom(sock, packet, sizeof(packet), 0, (struct sockaddr *)&dest_in, &len)))
+    while ((bytes_received = recvfrom(sock, packet, sizeof(packet), MSG_DONTWAIT, (struct sockaddr *)&dest_in, &len)))
     {
+           if (waitpid(pid, &status, WNOHANG) != 0)
+           {
+            exit(1);
+            }
         if (bytes_received > 0)
         {
             // set the end time and caculating ping time

@@ -1,8 +1,3 @@
-// icmp.cpp
-// Robert Iakobashvili for Ariel uni, license BSD/MIT/Apache
-//
-// Sending ICMP Echo Requests using Raw-sockets.
-//
 
 #include <arpa/inet.h>
 #include <errno.h>
