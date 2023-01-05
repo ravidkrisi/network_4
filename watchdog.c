@@ -18,7 +18,7 @@ int main(){
 
 //create receiver socket
 char *ip = "127.0.0.1";
-int port = 3023;
+int port = 3000;
 int e;
 
 int sockfd, new_sock;

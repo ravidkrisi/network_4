@@ -1,3 +1,5 @@
+all: parta partb
+
 parta: ping.c
 	gcc ping.c -o parta
 
