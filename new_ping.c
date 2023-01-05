@@ -26,7 +26,7 @@
 #define ICMP_HDRLEN 8
 
 //port and IP used to make TCP connection 
-#define WATCHDOG_PORT 3090
+#define WATCHDOG_PORT 3023
 #define WATCHDOG_IP "127.0.0.1"
 
 // Checksum algo
@@ -174,12 +174,20 @@ int main(int argc, char *argv[])
     }
 
     //send flag to WatchDog using TCP socket
-    char flag [2]= "00";
-    if (send(socktcp, flag, sizeof(flag), 0) == -1) 
+    char flag = 'k';
+    if (send(socktcp, &flag, sizeof(flag), 0) == -1) 
     {
     perror("[-]Error in sending file.");
     exit(1);
     }
+    //check if WATCHDOG shut down because of timeout 
+    if (waitpid(pid, &status, WNOHANG) != 0)
+           {
+            printf("server %s cannot be reached\n", argv[1]);
+            close(socktcp);
+            close(sock);
+            exit(1);
+            }
 
     // Get the ping response
     bzero(packet, IP_MAXPACKET);
@@ -187,10 +195,6 @@ int main(int argc, char *argv[])
     int bytes_received = -1;
     while ((bytes_received = recvfrom(sock, packet, sizeof(packet), MSG_DONTWAIT, (struct sockaddr *)&dest_in, &len)))
     {
-           if (waitpid(pid, &status, WNOHANG) != 0)
-           {
-            exit(1);
-            }
         if (bytes_received > 0)
         {
             // set the end time and caculating ping time
